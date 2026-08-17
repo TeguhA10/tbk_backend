@@ -7,6 +7,15 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
+# Ensure Docker environment variables are synced into .env
+if [ -f .env ] && [ -n "$DB_HOST" ]; then
+    sed -i "s/^DB_HOST=.*/DB_HOST=$DB_HOST/" .env 2>/dev/null || true
+    sed -i "s/^DB_PORT=.*/DB_PORT=${DB_PORT:-5432}/" .env 2>/dev/null || true
+    sed -i "s/^DB_DATABASE=.*/DB_DATABASE=${DB_DATABASE:-db_tbk}/" .env 2>/dev/null || true
+    sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME:-postgres}/" .env 2>/dev/null || true
+    sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD:-password123!}/" .env 2>/dev/null || true
+fi
+
 # Ensure storage and cache directories exist and have proper permissions
 mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache
 chmod -R 775 storage bootstrap/cache || true
