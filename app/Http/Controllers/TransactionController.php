@@ -31,8 +31,48 @@ class TransactionController extends Controller
             });
         }
 
-        $transactions = $query->get();
-        return response()->json($transactions);
+        // Summary calculations over all filtered data before pagination slice
+        $summaryQuery = clone $query;
+        $totalDebit = (float) (clone $summaryQuery)->sum('debit');
+        $totalCredit = (float) (clone $summaryQuery)->sum('credit');
+        $totalNet = $totalCredit - $totalDebit;
+
+        $perPage = $request->input('per_page', 10);
+
+        if ($perPage === 'all' || (int) $perPage === -1) {
+            $transactions = $query->get();
+            return response()->json([
+                'data' => $transactions,
+                'total' => $transactions->count(),
+                'per_page' => $transactions->count(),
+                'current_page' => 1,
+                'last_page' => 1,
+                'from' => $transactions->isEmpty() ? 0 : 1,
+                'to' => $transactions->count(),
+                'summary' => [
+                    'total_debit' => $totalDebit,
+                    'total_credit' => $totalCredit,
+                    'net' => $totalNet,
+                ]
+            ]);
+        }
+
+        $paginated = $query->paginate((int) $perPage);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'per_page' => $paginated->perPage(),
+            'total' => $paginated->total(),
+            'from' => $paginated->firstItem() ?? 0,
+            'to' => $paginated->lastItem() ?? 0,
+            'summary' => [
+                'total_debit' => $totalDebit,
+                'total_credit' => $totalCredit,
+                'net' => $totalNet,
+            ]
+        ]);
     }
 
     public function store(Request $request)
