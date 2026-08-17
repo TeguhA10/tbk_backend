@@ -14,6 +14,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Category::count() > 0) {
+            return;
+        }
+
         // 1. Create Categories
         $salaryCat = Category::create(['name' => 'Salary', 'type' => 'income']);
         $otherIncomeCat = Category::create(['name' => 'Other Income', 'type' => 'income']);

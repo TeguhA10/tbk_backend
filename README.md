@@ -5,9 +5,9 @@ Backend RESTful API untuk Sistem Manajemen Keuangan PT. Trans Berjaya Khatulisti
 ## 🛠️ Stack Teknologi
 
 - **Framework**: Laravel 13.x
-- **Bahasa**: PHP 8.3
+- **Bahasa**: PHP 8.4
 - **Database**: PostgreSQL 16
-- **Containerization**: Docker (PHP 8.3 CLI Alpine + PostgreSQL Alpine)
+- **Containerization**: Docker (PHP 8.4 CLI Alpine + PostgreSQL Alpine)
 
 ## 🚀 Menjalankan Backend
 
