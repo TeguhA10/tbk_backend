@@ -31,7 +31,6 @@ class TransactionController extends Controller
             });
         }
 
-        // Summary calculations over all filtered data before pagination slice
         $summaryQuery = clone $query;
         $totalDebit = (float) (clone $summaryQuery)->sum('debit');
         $totalCredit = (float) (clone $summaryQuery)->sum('credit');
