@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exports\ProfitLossExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -78,82 +80,14 @@ class ReportController extends Controller
     public function exportProfitLoss(Request $request)
     {
         $reportResponse = $this->profitLoss($request);
+
         $data = $reportResponse->getData(true);
 
-        $months = $data['months'];
-        
-        $filename = 'Laporan_Profit_Loss_' . date('Ymd_His') . '.csv';
+        $filename = 'Laporan_Profit_Loss_' . date('Ymd_His') . '.xlsx';
 
-        $headers = [
-            "Content-type" => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename={$filename}",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
-        ];
-
-        $callback = function () use ($data, $months) {
-            $file = fopen('php://output', 'w');
-            
-            // Add UTF-8 BOM for Excel compatibility
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-
-            // Header Title
-            fputcsv($file, ['PT. TRANS BERJAYA KHATULISTIWA']);
-            fputcsv($file, ['LAPORAN PROFIT / LOSS (LABA RUGI)']);
-            fputcsv($file, ['Periode: ' . implode(' s/d ', [$months[0] ?? '', end($months) ?? ''])]);
-            fputcsv($file, []);
-
-            // Table Columns
-            $headerRow = array_merge(['Category'], $months);
-            fputcsv($file, $headerRow);
-
-            // Income Section
-            fputcsv($file, ['--- INCOME ---']);
-            foreach ($data['income_categories'] as $incCat) {
-                $row = [$incCat['name']];
-                foreach ($months as $m) {
-                    $row[] = number_format($incCat['amounts'][$m] ?? 0, 0, ',', '.');
-                }
-                fputcsv($file, $row);
-            }
-
-            // Total Income
-            $totalIncRow = ['Total Income'];
-            foreach ($months as $m) {
-                $totalIncRow[] = number_format($data['total_income'][$m] ?? 0, 0, ',', '.');
-            }
-            fputcsv($file, $totalIncRow);
-            fputcsv($file, []);
-
-            // Expense Section
-            fputcsv($file, ['--- EXPENSE ---']);
-            foreach ($data['expense_categories'] as $expCat) {
-                $row = [$expCat['name']];
-                foreach ($months as $m) {
-                    $row[] = number_format($expCat['amounts'][$m] ?? 0, 0, ',', '.');
-                }
-                fputcsv($file, $row);
-            }
-
-            // Total Expense
-            $totalExpRow = ['Total Expense'];
-            foreach ($months as $m) {
-                $totalExpRow[] = number_format($data['total_expense'][$m] ?? 0, 0, ',', '.');
-            }
-            fputcsv($file, $totalExpRow);
-            fputcsv($file, []);
-
-            // Net Income Row
-            $netIncRow = ['Net Income'];
-            foreach ($months as $m) {
-                $netIncRow[] = number_format($data['net_income'][$m] ?? 0, 0, ',', '.');
-            }
-            fputcsv($file, $netIncRow);
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(
+            new ProfitLossExport($data),
+            $filename
+        );
     }
 }
